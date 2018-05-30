@@ -5,8 +5,4 @@
   gather_facts: yes
   become_user: root
   roles:
-     - postgres
-     - nginx
-     - firewalld
-     - galaxy
-     #- tools-galaxy
+     - tools-galaxy
