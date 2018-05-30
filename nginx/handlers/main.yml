@@ -1,0 +1,21 @@
+---
+# handlers file for nginx
+- name: Start Nginx
+  service:
+    name: nginx
+    state: started
+
+- name : Reload Nginx
+  service:
+    name: nginx
+    state: reloaded
+
+- name : Reload Firewalld
+  service:
+    name: firewalld
+    state: reloaded
+
+- name : Start Firewalld
+  service:
+    name: firewalld
+    state: started

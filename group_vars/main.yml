@@ -1,0 +1,5 @@
+---
+domain: "rstudio-testclass-watson"
+admin_email: "millelog@oregonstate.edu"
+ssl_crt: /find/path/to/this
+ssl_key: /find/path/to/this

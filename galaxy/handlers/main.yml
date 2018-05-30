@@ -1,0 +1,10 @@
+# handlers file for galax
+- name: Start Supervisor
+  service:
+    name: supervisord
+    state: started
+
+- name: Reload Supervisor
+  service:
+    name: supervisord
+    state: restarted

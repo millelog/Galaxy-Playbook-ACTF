@@ -1,0 +1,14 @@
+---
+# handlers file for supervisor
+- name: Start supervisord
+  service:
+    name: supervisord
+    state: stopped
+    enabled: yes
+
+- name : Reload supervisord
+  service:
+    name: supervisord
+    state: stopped
+
+

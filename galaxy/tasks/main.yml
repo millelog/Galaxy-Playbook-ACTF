@@ -1,0 +1,110 @@
+---
+# tasks file for galaxy
+- name: Install yum requirments
+  yum: name={{ item }} state=latest
+  with_items: ["python-devel", "openldap-devel", "python-setuptools", "supervisor", "lzo-devel"]
+
+- name: Install dev tools
+  yum:
+    name: "@development tools"
+    state: latest
+
+- name: Create log directory
+  file: path=/var/log/supervisord state=directory
+
+- name: Create Galaxy user
+  user:
+    name: galaxy
+    password: a3b5e89c680a19af9938e385b5f2e52e3c9f5f502c6a5cdcecbfde68d964118fa63861684a07237544c4054f147826d705666269ab679164f8fe92bd1ab26a91
+
+- import_tasks: install_pip.yml
+
+- name: Clone in Galaxy
+  git:
+    repo: https://github.com/galaxyproject/galaxy.git
+    dest: /data/galaxy
+    force: yes
+
+- name: install virtualenv
+  pip:
+    name: "virtualenv"
+    state: latest
+
+- name: Manually create the initial virtualenv
+  command: virtualenv --python=/usr/bin/python2.7 --no-site-packages /data/galaxy/.venv
+
+- name: copy in venv activation script
+  copy: 
+    dest: /data/galaxy/venv_exec.sh
+    src: venv_exec.j2
+    mode: 755
+
+- name: activate venv
+  command: /data/galaxy/venv_exec.sh
+
+- name: install pip tools
+  pip: 
+    name: "{{ item }}" 
+    state: latest
+    virtualenv: /data/galaxy/.venv
+  with_items: ["daemonize", "pyldap", "uwsgi", "psycopg2", "wheel", "setuptools"]
+
+- name: install galaxy python requirements
+  pip:
+    requirements: /data/galaxy/requirements.txt
+    virtualenv: /data/galaxy/.venv
+
+#- name: Rename all sample configs to active ones
+#  command: cd /data/galaxy/config; for f in *.sample; do mv "$f" "${f%.sample}"; done;
+
+- name: Copy restart_headless.sh
+  copy:
+    src: restart_headless.sh
+    dest: /data/galaxy/
+    owner: galaxy
+    group: galaxy
+
+- name: Copy Galaxy.yml
+  copy:
+    src: galaxy.yml
+    dest: /data/galaxy/config/
+    owner: galaxy
+    group: galaxy
+
+- name: Copy dependency_resolvers_conf.xml
+  command: mv /data/galaxy/config/dependency_resolvers_conf.xml.sample /data/galaxy/config/dependency_resolvers_conf.xml
+
+- name: Include encrypted secrets
+  include_vars: secrets.yml
+
+- name: Format Galaxy.yml configuration
+  template: 
+    src: galaxy.yml
+    dest: '/data/galaxy/config/galaxy.yml'
+    owner: galaxy
+    group: galaxy
+
+- name: Set galaxy user as owner of root galaxy directory
+  file:
+    path: /data/galaxy
+    owner: galaxy
+    group: galaxy
+    recurse: yes
+
+- name: Start galaxy instance
+  command: /data/galaxy/run.sh --daemon
+  become: yes
+  become_user: galaxy
+
+#- name: Turn on supervisord
+#  command: supervisord
+
+#- name: Remove existing supervisord socket
+#  file:
+#    path: /var/run/supervisor.sock
+#    state: absent
+
+#- name: manually restart supervisor
+#  command: /bin/true
+ # notify: Reload Supervisor 
+

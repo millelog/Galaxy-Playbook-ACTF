@@ -1,0 +1,76 @@
+---
+# tasks file for nginx
+- import_tasks: install_pip.yml
+
+#- name: Check if EPEL is configured
+#  stat: path={{ epel_repofile_path }}
+#  register: epel_repofile_result
+
+#- name: Add Nginx Repo
+#  yum:
+#    name: "{{ epel_repo_url }}"
+#    state: present
+#  register: result
+#  when: not epel_repofile_result.stat.exists
+#
+#- name: import EPEL GPG Key
+#  rpm_key:
+#    key: "{{ epel_repo_gpg_key_url }}"
+#    state: present
+#  when: not epel_repofile_result.stat.exists
+#
+#- name: Install Nginx
+#  yum:
+#    pkg: nginx
+#    state: installed
+##    update_cache: true
+#  notify:
+#    -  Start Nginx
+- import_tasks: auth_compile.yml
+
+- name: Add H5BP Config
+  copy:
+    src: h5bp
+    dest: /etc/nginx/
+    owner: root
+    group: root
+
+
+- name: Add galaxy-nginx config
+  copy:
+    src: nginx.conf
+    dest: /etc/nginx/
+    owner: root
+    group: root
+  
+- name: Copy gzip config
+  copy:
+    src: gzip.conf
+    dest: /etc/nginx/default.d/
+    owner: root
+    group: root
+
+- name: Add Templated Config
+  template:
+    src: default.conf
+    dest: '/etc/nginx/conf.d/{{ domain }}.conf'
+    owner: root
+    group: root
+  notify:
+   - Reload Nginx
+
+- name: Set httpd bool
+  command: setsebool httpd_can_network_connect 1
+  ignore_errors: yes
+  notify:
+   - Reload Nginx
+
+#  command: firewall-cmd --zone=public --permanent --add-service=http
+
+- name: Ensure Proper Hostname
+  command: hostnamectl set-hostname {{ domain }}.actf.oregonstate.local
+
+- name: trigger nginx-restart
+  command: /bin/true
+  notify: Reload Nginx
+

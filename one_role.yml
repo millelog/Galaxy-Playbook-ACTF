@@ -1,0 +1,9 @@
+---
+#run locally on galaxy prod servers
+- hosts: target
+  become: yes
+  gather_facts: yes
+  become_user: root
+  roles:
+     - tools-galaxy
+
