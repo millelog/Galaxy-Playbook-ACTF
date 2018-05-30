@@ -7,6 +7,5 @@
   roles:
      - postgres
      - nginx
-     - firewalld
+     - firewall
      - galaxy
-     #- tools-galaxy
